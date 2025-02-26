@@ -1,4 +1,5 @@
 # data_processor.py
+''' 데이터 전처리 at server.py '''
 def preprocess_input_data(data: dict) -> dict:
     """
     server.py에서 전달된 원본 데이터를 정제하여 필요한 정보를 추출.
@@ -9,11 +10,12 @@ def preprocess_input_data(data: dict) -> dict:
         "user_info": data.get("user_info", {}),
         "gpt_mbti": data.get("gpt_mbti", {}).get("MBTI", "").upper(),  # ✅ MBTI 대문자 변환
         "fortune": data.get("fortune", {}),
-        "vs_data": data.get("vs_data", {}),
+        # "vs_data": data.get("vs_data", {}),
         "question": data.get("question", "추천을 받고 싶어요.")  # ✅ 기본 질문 설정
     }
 
 
+''' 프롬포트 생성 at recommendation_model.py '''
 def process_prompt_data(clean_data: dict) -> str:
     """
     정제된 데이터를 받아 GPT 프롬프트를 생성.
@@ -21,16 +23,16 @@ def process_prompt_data(clean_data: dict) -> str:
     user_info = clean_data["user_info"]
     gpt_mbti = clean_data["gpt_mbti"]
     fortune = clean_data["fortune"]
-    vs_data = clean_data["vs_data"]
+    # vs_data = clean_data["vs_data"]
     question = clean_data["question"]
     
     # MBTI 역할 지시 (간단한 매핑)
     mbti_role = get_mbti_role(gpt_mbti)
     
-    # vs 데이터(취향 정보) 요약: 예를 들어 "커피_vs_차"에서 앞쪽 단어만 추출
-    taste_summary = ", ".join(
-        [f"{key.split('_vs_')[0]}: {value}" for key, value in vs_data.items()]
-    )
+    # # vs 데이터(취향 정보) 요약: 예를 들어 "커피_vs_차"에서 앞쪽 단어만 추출
+    # taste_summary = ", ".join(
+    #     [f"{key.split('_vs_')[0]}: {value}" for key, value in vs_data.items()]
+    # )
     
     # 프롬프트 구성 (여러 정보를 균형 있게 포함)
     prompt = (
@@ -38,10 +40,10 @@ def process_prompt_data(clean_data: dict) -> str:
 
         f"**GPT 역할**: {mbti_role}\n"
 
-        f"**오늘의 운세**: {fortune.get('daily', '운세 정보 없음')}\n"
-        f"**사주 분석**: {fortune.get('saju', '사주 정보 없음')}\n"
+        f"**오늘의 운세**: {fortune.get('lucky', '운세 정보 없음')}\n"
+        # f"**사주 분석**: {fortune.get('saju', '사주 정보 없음')}\n"
 
-        f"**사용자 취향**: {taste_summary if taste_summary else '취향 정보 없음'}\n"
+        # f"**사용자 취향**: {taste_summary if taste_summary else '취향 정보 없음'}\n"
 
         f"**질문**: {question}\n\n"
 
@@ -52,7 +54,7 @@ def process_prompt_data(clean_data: dict) -> str:
 
     return prompt
 
-
+''' 위 함수에 사용됨 '''
 def get_mbti_role(gpt_mbti: str) -> str:
     """
     MBTI에 따른 역할 지시를 반환합니다.
