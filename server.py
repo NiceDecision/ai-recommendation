@@ -27,7 +27,7 @@ recommend_model = RecommendationModel(model_name="gpt-4o-mini")
 
 @app.post("/ai/fortune")
 def get_fortune(data: dict = Body(..., example={
-    "question": "내일 데이트 가는데 어떤 옷을 입어야 할까요?",
+    "question": "오늘 점심을 뭘 먹을까? 짜장면 vs 짬뽕?",
     "gpt_mbti": {"MBTI": "INFJ"},
     "user_info": {
         "birth": "1997-02-07",

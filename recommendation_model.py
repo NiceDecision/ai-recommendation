@@ -63,7 +63,10 @@ class RecommendationModel:
         # 1. 대화 히스토리 로드
         past_messages = self._get_chat_history(session_id)
         input_messages = [HumanMessage(clean_data["question"])]
-        all_messages = past_messages + input_messages
+        
+        MAX_HISTORY = 5  # 5개만 확인(과도한 입력 방지)
+        all_messages = (past_messages + input_messages)[-MAX_HISTORY:]
+
 
         # 2. 최근 질문 추출
         last_human_message = self._get_last_user_message(all_messages)
@@ -79,15 +82,12 @@ class RecommendationModel:
         })
 
         # 5. GPT 실행
-        response = self.model.invoke(prompt)
+        response = self.model.invoke(prompt, config={"max_tokens": 300, "temperature": 0.3})
 
         # 6. 대화 히스토리 저장
         chat_history = SQLChatMessageHistory(session_id=session_id, connection_string=self.db_connection)
         chat_history.add_user_message(last_human_message)
         chat_history.add_ai_message(response.content)
-
-        # 7. 토큰 사용량 분석
-        show_token_result(str(prompt), response.content)
 
         return response.content
 
@@ -97,29 +97,21 @@ def generate_comparison_questions():
     # GPT 모델 초기화
     model = init_chat_model("gpt-4o-mini", model_provider="openai")
 
-    # 시스템 프롬프트 템플릿 작성
-    system_template = (
+    # 간소화된 프롬프트 문자열
+    prompt_text = (
         "다음 형식에 맞춰 5개의 랜덤 비교 질문을 생성해 주세요:\n"
         "'testX: 항목 A vs 항목 B'\n"
-        "항목은 단어 또는 문장이 될 수 있습니다.\n"
-        "각 테스트 케이스는 줄 바꿈으로 구분해주세요.\n"
+        "각 테스트 케이스는 줄 바꿈으로 구분되어야 하며, 음식, 스포츠, 예술, 기술, 자연 등 다양한 분야의 항목을 포함하세요.\n"
+        "대중적인 항목과 창의적이고 색다른 항목이 적절히 혼합되도록 하고, 자주 사용되는 항목은 절반 정도만 포함하세요.\n"
         "예제:\n"
         "test1: 강아지 vs 고양이\n"
         "test2: 커피 vs 차\n"
-        "답변은 테스트 케이스만 포함하고, 다른 설명은 절대 추가하지 마세요."
+        "답변은 테스트 케이스만 포함하고, 추가 설명은 절대 포함하지 마세요."
     )
 
-    # ChatPromptTemplate 생성 (system 메시지만 사용)
-    prompt_template = ChatPromptTemplate.from_messages([("system", system_template)])
-
-    # 프롬프트 생성
-    prompt_value = prompt_template.invoke({})
-    prompt_text = prompt_value.messages[-1].content  # 마지막 메시지의 content만 추출
-
-    # GPT 호출 (응답 길이를 제한)
-    response = model.invoke([HumanMessage(prompt_text)], max_tokens=200)
+    # GPT 호출 (응답 길이를 제한, 다양성 높게)
+    response = model.invoke([HumanMessage(prompt_text)], config={"max_tokens": 200, "temperature": 0.7})
 
     clean_json = parse_choice_to_json(response.content.strip())
 
-    # 응답에서 content만 반환
     return clean_json
