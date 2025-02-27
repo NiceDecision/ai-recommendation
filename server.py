@@ -5,7 +5,6 @@ from recommendation_model import RecommendationModel, generate_comparison_questi
 from fastapi.responses import JSONResponse
 from data_processor import preprocess_input_data    # 데이터 전처리 함수
 from utils import get_formatted_recommendation_response
-import openai
 
 app = FastAPI()
 
@@ -60,6 +59,7 @@ def get_choices():
 #     """
 #     특정 session_id의 대화 기록을 role과 함께 JSON 형태로 반환하는 API 엔드포인트
 #     """
+#     from utils import get_chat_history_with_roles
 #     chat_history = get_chat_history_with_roles(session_id, DB_CONNECTION)
     
 #     return JSONResponse(content={"session_id": session_id, "messages": chat_history})

@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 
 # 다른 파일 로드
 from data_processor import process_prompt_data          # 데이터 전처리, 후처리
-from utils import parse_choice_to_json, show_token_result
+from utils import parse_choice_to_json
 
 # API KEY 자동 로드
 load_dotenv()
@@ -77,12 +77,13 @@ class RecommendationModel:
         # 4. 프롬프트 템플릿 적용
         prompt = self.prompt_template.invoke({
             "context": context,
-            "history": all_messages,
+            "history": all_messages, #[HumanMessage("")], 
             "question": last_human_message
         })
+        print(prompt)
 
         # 5. GPT 실행
-        response = self.model.invoke(prompt, config={"max_tokens": 300, "temperature": 0.3})
+        response = self.model.invoke(prompt, config={"max_tokens": 300, "temperature": 0.6})
 
         # 6. 대화 히스토리 저장
         chat_history = SQLChatMessageHistory(session_id=session_id, connection_string=self.db_connection)
@@ -97,7 +98,7 @@ def generate_comparison_questions():
     # GPT 모델 초기화
     model = init_chat_model("gpt-4o-mini", model_provider="openai")
 
-    # 간소화된 프롬프트 문자열
+    # 프롬프트 문자열
     prompt_text = (
         "다음 형식에 맞춰 5개의 랜덤 비교 질문을 생성해 주세요:\n"
         "'testX: 항목 A vs 항목 B'\n"
