@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 
 # 다른 파일 로드
 from data_processor import process_prompt_data          # 데이터 전처리, 후처리
-from utils import show_token_result                     # DEBUG 함수
+from utils import parse_choice_to_json, show_token_result
 
 # API KEY 자동 로드
 load_dotenv()
@@ -90,3 +90,36 @@ class RecommendationModel:
         show_token_result(str(prompt), response.content)
 
         return response.content
+
+
+''' 별개로 5개의 질문을 생성하는 함수 '''
+def generate_comparison_questions():
+    # GPT 모델 초기화
+    model = init_chat_model("gpt-4o-mini", model_provider="openai")
+
+    # 시스템 프롬프트 템플릿 작성
+    system_template = (
+        "다음 형식에 맞춰 5개의 랜덤 비교 질문을 생성해 주세요:\n"
+        "'testX: 항목 A vs 항목 B'\n"
+        "항목은 단어 또는 문장이 될 수 있습니다.\n"
+        "각 테스트 케이스는 줄 바꿈으로 구분해주세요.\n"
+        "예제:\n"
+        "test1: 강아지 vs 고양이\n"
+        "test2: 커피 vs 차\n"
+        "답변은 테스트 케이스만 포함하고, 다른 설명은 절대 추가하지 마세요."
+    )
+
+    # ChatPromptTemplate 생성 (system 메시지만 사용)
+    prompt_template = ChatPromptTemplate.from_messages([("system", system_template)])
+
+    # 프롬프트 생성
+    prompt_value = prompt_template.invoke({})
+    prompt_text = prompt_value.messages[-1].content  # 마지막 메시지의 content만 추출
+
+    # GPT 호출 (응답 길이를 제한)
+    response = model.invoke([HumanMessage(prompt_text)], max_tokens=200)
+
+    clean_json = parse_choice_to_json(response.content.strip())
+
+    # 응답에서 content만 반환
+    return clean_json

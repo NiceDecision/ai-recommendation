@@ -67,3 +67,16 @@ def show_token_result(prompt: str, response_text: str, model_name: str = "gpt-4o
     print(f"[DEBUG] Output token count: {output_token_count}")
     print(f"[DEBUG] Cost for this iteration: ${iteration_cost:.8f}")
     print(f"[DEBUG] Estimated cost for 100 iterations: ${estimated_cost_100:.8f}")
+
+
+''' 선택 문제 생성 파싱 '''
+import re
+
+def parse_choice_to_json(response_text):
+    # 정규식으로 "testX: 항목A vs 항목B" 패턴 찾기
+    pattern = r"test(\d+):\s*(.+?)\s*vs\s*(.+)"
+    matches = re.findall(pattern, response_text)
+
+    # JSON 변환
+    json_data = {f"test{num}": f"{itemA.strip()} vs {itemB.strip()}" for num, itemA, itemB in matches}
+    return json_data
