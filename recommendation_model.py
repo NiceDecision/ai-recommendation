@@ -13,6 +13,9 @@ from utils import show_token_result                     # DEBUG 함수
 # API KEY 자동 로드
 load_dotenv()
 
+# DB 설정
+DB_CONNECTION = "sqlite:///sqlite_recommend.db"
+
 
 class RecommendationModel:
     """
@@ -35,7 +38,7 @@ class RecommendationModel:
         ])
 
         # SQLite 기반 대화 히스토리 저장 설정
-        self.db_connection = "sqlite:///sqlite_recommend.db"
+        self.db_connection = DB_CONNECTION
 
     def _get_chat_history(self, session_id: str):
         """

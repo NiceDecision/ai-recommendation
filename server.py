@@ -10,14 +10,18 @@ from utils import get_chat_history_with_roles, get_formatted_recommendation_resp
 
 app = FastAPI()
 
+
 # CORS 설정 (필요한 도메인만 지정 가능)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 단계에서는 모든 도메인 허용
+    allow_origins=["*"],  # 일단 모든 도메인 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# DB 설정
+DB_CONNECTION = "sqlite:///sqlite_recommend.db"
 
 # 모델 인스턴스 생성
 gpt_model = RecommendationModel(model_name="gpt-4o-mini")
@@ -25,10 +29,14 @@ gpt_model = RecommendationModel(model_name="gpt-4o-mini")
 @app.post("/ai/fortune")
 def get_fortune(data: dict = Body(..., example={
     "question": "내일 데이트 가는데 어떤 옷을 입어야 할까요?",
-    "user_info": {"birth": "1990-01-01", "gender": "여성"},
     "gpt_mbti": {"MBTI": "INFJ"},
-    "fortune": {"lucky": "대인 관계 운 상승, 재물운 평범, 정서적 안정감과 창의력이 돋보이는 하루"}
-    # , "vs_data": {"커피_vs_차": "커피", "산_vs_바다": "바다", "원피스_vs_블라우스_스커트": "원피스"}
+    "user_info": {
+        "birth": "1997-02-07",
+        "birth_time": "23:05",
+        "gender": "여성",
+        "name": "엘리스",
+        "isLunar": True
+    }
 })):
     # 최초 데이터 정제해서
     clean_data = preprocess_input_data(data)
@@ -46,7 +54,6 @@ def get_chat_history(session_id: str = Path(...,
     """
     특정 session_id의 대화 기록을 role과 함께 JSON 형태로 반환하는 API 엔드포인트
     """
-    DB_CONNECTION = "sqlite:///sqlite_recommend.db"
     chat_history = get_chat_history_with_roles(session_id, DB_CONNECTION)
     
     return JSONResponse(content={"session_id": session_id, "messages": chat_history})
